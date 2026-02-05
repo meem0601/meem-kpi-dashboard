@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { hrBase, getCurrentMonthRange, getMonthRange, getLast12Months, toNumber } from '@/lib/airtable';
+
+// 60秒キャッシュ
+export const revalidate = 60;
 
 interface HRKPI {
   revenue: number;

@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { realestateBase, getCurrentMonthRange, getMonthRange, getLast12Months, toNumber } from '@/lib/airtable';
+
+// 60秒キャッシュ
+export const revalidate = 60;
 
 // 売上・成約カウントで除外するステータス
 const REVENUE_EXCLUDED_STATUSES = [

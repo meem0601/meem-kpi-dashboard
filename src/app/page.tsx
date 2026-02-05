@@ -5,6 +5,7 @@ import KPICard from '@/components/KPICard';
 import PipelineCard from '@/components/PipelineCard';
 import RevenueChart from '@/components/RevenueChart';
 import TaskList from '@/components/TaskList';
+import TaskSection from '@/components/TaskSection';
 
 // 目標値（ハードコード - 後で設定画面を作成）
 const TARGETS = {
@@ -301,6 +302,11 @@ export default function Dashboard() {
             />
           </div>
         )}
+
+        {/* This Week's Tasks Section */}
+        <div className="mb-5 animate-slideUp" style={{ animationDelay: '320ms' }}>
+          <TaskSection />
+        </div>
 
         {/* Tasks and Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
