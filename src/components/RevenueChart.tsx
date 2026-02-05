@@ -12,7 +12,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 
 ChartJS.register(
   CategoryScale,
@@ -41,29 +41,44 @@ export default function RevenueChart({ salesData, realestateData, hrData }: Reve
       {
         label: 'Sales',
         data: salesData.map((d) => d.revenue / 10000),
-        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
         borderColor: 'rgba(59, 130, 246, 1)',
-        borderWidth: 2,
-        borderRadius: 6,
-        borderSkipped: false,
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
       },
       {
         label: '不動産AS',
         data: realestateData.map((d) => d.revenue / 10000),
-        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
         borderColor: 'rgba(34, 197, 94, 1)',
-        borderWidth: 2,
-        borderRadius: 6,
-        borderSkipped: false,
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: 'rgba(34, 197, 94, 1)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
       },
       {
         label: '人材',
         data: hrData.map((d) => d.revenue / 10000),
-        backgroundColor: 'rgba(168, 85, 247, 0.8)',
+        backgroundColor: 'rgba(168, 85, 247, 0.1)',
         borderColor: 'rgba(168, 85, 247, 1)',
-        borderWidth: 2,
-        borderRadius: 6,
-        borderSkipped: false,
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: 'rgba(168, 85, 247, 1)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
       },
     ],
   };
@@ -150,7 +165,7 @@ export default function RevenueChart({ salesData, realestateData, hrData }: Reve
         月次売上推移（直近12ヶ月）
       </h3>
       <div className="h-72">
-        <Bar data={data} options={options} />
+        <Line data={data} options={options} />
       </div>
     </div>
   );
