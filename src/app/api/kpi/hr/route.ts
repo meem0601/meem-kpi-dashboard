@@ -5,7 +5,8 @@ interface HRKPI {
   revenue: number;
   contracts: number;
   pipeline: {
-    prospects: number;        // 見込み顧客(新規)
+    prospects: number;        // 見込み顧客(全体)
+    newProspects: number;     // 新規見込み顧客(当月登録)
     documentScreening: number; // 書類推薦中
     interviewing: number;     // 面接中
     offerPending: number;     // 内定中
@@ -26,7 +27,7 @@ export async function GET() {
 
     // Fetch from 案件 table for prospects
     const caseRecords = await hrBase('案件').select({
-      fields: ['推薦日', 'Created'],
+      fields: ['初回推薦日', '案件登録日'],
     }).all();
 
     let revenue = 0;
@@ -59,15 +60,21 @@ export async function GET() {
       }
     });
 
-    // 見込み顧客(新規): 案件テーブル 推薦日=空 + Created当月
+    // 見込み顧客(新規): 案件テーブル 推薦日=空 + 案件登録日が当月
     let prospects = 0;
+    let totalProspects = 0;
     caseRecords.forEach((record) => {
-      const recommendationDate = record.get('推薦日') as string;
-      const createdDate = record.get('Created') as string;
+      const recommendationDate = record.get('初回推薦日') as string[] | string | null;
+      const registrationDate = record.get('案件登録日') as string;
 
-      if (!recommendationDate && createdDate) {
-        const created = createdDate.split('T')[0];
-        if (created >= start && created <= end) {
+      // 推薦日が空（まだ推薦されていない）= 見込み顧客
+      const hasNoRecommendation = !recommendationDate || 
+        (Array.isArray(recommendationDate) && recommendationDate.length === 0);
+      
+      if (hasNoRecommendation) {
+        totalProspects++;
+        // 新規 = 案件登録日が当月
+        if (registrationDate && registrationDate >= start && registrationDate <= end) {
           prospects++;
         }
       }
@@ -95,7 +102,8 @@ export async function GET() {
       revenue,
       contracts,
       pipeline: {
-        prospects,
+        prospects: totalProspects,
+        newProspects: prospects,
         documentScreening: documentScreeningApplicants.size,
         interviewing: interviewingApplicants.size,
         offerPending: 0, // 集計不可
