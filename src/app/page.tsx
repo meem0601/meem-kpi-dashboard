@@ -442,7 +442,7 @@ export default function Dashboard() {
                   </svg>
                 </a>
                 <a
-                  href="https://www.notion.so/"
+                  href="https://www.notion.so/2e8559b71fa2808c8b97000b74435c7c"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl hover:from-purple-100 hover:to-pink-100 text-gray-700 transition-all border border-purple-100 group"
@@ -454,13 +454,11 @@ export default function Dashboard() {
                   </svg>
                 </a>
                 <a
-                  href="https://airtable.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/links"
                   className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl hover:from-green-100 hover:to-emerald-100 text-gray-700 transition-all border border-green-100 group"
                 >
-                  <span className="text-xl group-hover:scale-110 transition-transform">📊</span>
-                  <span className="font-medium">Airtable</span>
+                  <span className="text-xl group-hover:scale-110 transition-transform">🔖</span>
+                  <span className="font-medium">リンク集</span>
                   <svg className="w-4 h-4 ml-auto text-gray-400 group-hover:text-green-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>

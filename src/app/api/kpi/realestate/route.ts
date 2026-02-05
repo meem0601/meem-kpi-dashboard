@@ -67,8 +67,8 @@ export async function GET() {
       }
 
       // パイプライン
-      // 見込み顧客: ステータス=案件登録/内見
-      if (status === '案件登録' || status === '内見') {
+      // 見込み顧客: ステータス=案件登録/内見/申込後キャンセル/審査落ち
+      if (status === '案件登録' || status === '内見' || status === '申込後キャンセル' || status === '審査落ち') {
         prospects++;
       }
 

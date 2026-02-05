@@ -27,6 +27,18 @@ function getWeekRange() {
   };
 }
 
+// 担当者情報を抽出
+function extractAssignees(peopleProperty: any): { id: string; name: string; avatarUrl: string | null }[] {
+  if (!peopleProperty?.people || !Array.isArray(peopleProperty.people)) {
+    return [];
+  }
+  return peopleProperty.people.map((person: any) => ({
+    id: person.id,
+    name: person.name || 'Unknown',
+    avatarUrl: person.avatar_url || null,
+  }));
+}
+
 // タスク一覧取得
 export async function GET(request: Request) {
   try {
@@ -83,6 +95,7 @@ export async function GET(request: Request) {
         priority: properties['優先順位']?.select?.name || '',
         dueDate: properties['期日']?.date?.start || null,
         business: properties['事業']?.select?.name || '',
+        assignees: extractAssignees(properties['担当者']),
         url: page.url,
       };
     });
@@ -101,7 +114,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title } = body;
+    const { title, business, dueDate, priority } = body;
 
     if (!title || typeof title !== 'string') {
       return NextResponse.json(
@@ -110,33 +123,73 @@ export async function POST(request: Request) {
       );
     }
 
+    const properties: any = {
+      '項目': {
+        title: [
+          {
+            text: {
+              content: title,
+            },
+          },
+        ],
+      },
+      'ステータス': {
+        status: {
+          name: '未着手',
+        },
+      },
+    };
+
+    // 事業を追加
+    if (business) {
+      properties['事業'] = {
+        select: {
+          name: business,
+        },
+      };
+    }
+
+    // 期日を追加
+    if (dueDate) {
+      properties['期日'] = {
+        date: {
+          start: dueDate,
+        },
+      };
+    }
+
+    // 優先度を追加
+    if (priority) {
+      properties['優先順位'] = {
+        select: {
+          name: priority,
+        },
+      };
+    }
+
     const notion = getNotionClient();
     const response = await notion.pages.create({
       parent: {
         database_id: TASK_DATABASE_ID,
       },
-      properties: {
-        '項目': {
-          title: [
-            {
-              text: {
-                content: title,
-              },
-            },
-          ],
-        },
-        'ステータス': {
-          status: {
-            name: '未着手',
-          },
-        },
-      },
+      properties,
     });
+
+    // 作成したタスクの情報を返す
+    const createdTask = {
+      id: response.id,
+      title,
+      status: '未着手',
+      priority: priority || '',
+      dueDate: dueDate || null,
+      business: business || '',
+      assignees: [],
+      url: 'url' in response ? response.url : null,
+    };
 
     return NextResponse.json({ 
       success: true, 
-      id: response.id,
-      url: 'url' in response ? response.url : null,
+      task: createdTask,
     });
   } catch (error) {
     console.error('Notion Create Task Error:', error);
