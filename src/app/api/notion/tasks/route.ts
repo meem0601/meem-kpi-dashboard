@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { Client } from '@notionhq/client';
 
-const notion = new Client({
-  auth: process.env.NOTION_API_KEY,
-});
-
 const TASK_DATABASE_ID = '2e8559b7-1fa2-8097-b09e-c8bc5114604f';
+
+function getNotionClient() {
+  return new Client({
+    auth: process.env.NOTION_API_KEY,
+  });
+}
 
 // 今週の開始日と終了日を取得
 function getWeekRange() {
@@ -59,7 +61,7 @@ export async function GET(request: Request) {
       };
     }
 
-    // @ts-expect-error - Notion SDK v5 type definitions issue
+    const notion = getNotionClient();
     const response = await notion.databases.query({
       database_id: TASK_DATABASE_ID,
       filter,
@@ -86,10 +88,10 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json({ tasks });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Notion Tasks Error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch tasks' },
+      { error: 'Failed to fetch tasks', details: error?.message || String(error) },
       { status: 500 }
     );
   }
@@ -108,6 +110,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const notion = getNotionClient();
     const response = await notion.pages.create({
       parent: {
         database_id: TASK_DATABASE_ID,
@@ -207,6 +210,7 @@ export async function PATCH(request: Request) {
       }
     }
 
+    const notion = getNotionClient();
     await notion.pages.update({
       page_id: id,
       properties,
