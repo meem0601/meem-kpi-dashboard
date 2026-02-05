@@ -1,23 +1,30 @@
 import { NextResponse } from 'next/server';
 import { realestateBase, getCurrentMonthRange, getMonthRange, getLast12Months, toNumber } from '@/lib/airtable';
 
-// 除外するステータスのリスト
-const EXCLUDED_STATUSES = [
+// 売上・成約カウントで除外するステータス
+const REVENUE_EXCLUDED_STATUSES = [
   '案件登録',
   '内見',
-  '申込済み_審査中',
   '案件登録後キャンセル',
   '内見登録後キャンセル',
   '申込後キャンセル',
-  '審査落ち',
+];
+
+// 申込カウントで除外するステータス（案件登録/内見/キャンセル系のみ）
+const APPLICATION_EXCLUDED_STATUSES = [
+  '案件登録',
+  '内見',
+  '案件登録後キャンセル',
+  '内見登録後キャンセル',
 ];
 
 interface RealestateKPI {
   revenue: number;
   contracts: number;
   pipeline: {
-    prospects: number;        // 見込み顧客(新規)
-    expectedThisMonth: number; // 当月申込見込
+    prospects: number;        // 見込み顧客数
+    newProspects: number;     // 新規見込み数（当月案件登録）
+    applications: number;     // 申込数（当月最終申込日、審査中・審査落ち含む）
     awaitingReview: number;   // 審査待ち
   };
   monthlyRevenue: { month: string; revenue: number }[];
@@ -34,7 +41,9 @@ export async function GET() {
 
     let revenue = 0;
     let contracts = 0;
-    let prospects = 0;
+    let prospects = 0;       // 見込み顧客（案件登録/内見）
+    let newProspects = 0;    // 新規見込み（当月案件登録）
+    let applications = 0;    // 申込（当月最終申込日、除外ステータス以外）
     let awaitingReview = 0;
 
     records.forEach((record) => {
@@ -45,15 +54,26 @@ export async function GET() {
       const commission = toNumber(record.get('仲介手数料(税抜)'));
 
       // 売上・成約数: ステータスが除外リストに含まれない + 最終申込日が当月
-      if (!EXCLUDED_STATUSES.includes(status) && applicationDate && applicationDate >= start && applicationDate <= end) {
+      // ※審査落ちも売上にはカウントしない
+      if (!REVENUE_EXCLUDED_STATUSES.includes(status) && status !== '審査落ち' && applicationDate && applicationDate >= start && applicationDate <= end) {
         revenue += ad + commission;
         contracts++;
       }
 
       // パイプライン
-      // 見込み顧客(新規): ステータス=案件登録/内見 + 案件登録日が当月
-      if ((status === '案件登録' || status === '内見') && registrationDate && registrationDate >= start && registrationDate <= end) {
+      // 見込み顧客: ステータス=案件登録/内見
+      if (status === '案件登録' || status === '内見') {
         prospects++;
+      }
+
+      // 新規見込み: 案件登録日が当月
+      if (registrationDate && registrationDate >= start && registrationDate <= end) {
+        newProspects++;
+      }
+
+      // 申込: ステータスが除外リスト以外 + 最終申込日が当月（審査中・審査落ちも含む）
+      if (!APPLICATION_EXCLUDED_STATUSES.includes(status) && applicationDate && applicationDate >= start && applicationDate <= end) {
+        applications++;
       }
 
       // 審査待ち: ステータス="申込済み_審査中"
@@ -74,7 +94,7 @@ export async function GET() {
         const ad = toNumber(record.get('AD(税抜)'));
         const commission = toNumber(record.get('仲介手数料(税抜)'));
 
-        if (!EXCLUDED_STATUSES.includes(status) && applicationDate && applicationDate >= mStart && applicationDate <= mEnd) {
+        if (!REVENUE_EXCLUDED_STATUSES.includes(status) && status !== '審査落ち' && applicationDate && applicationDate >= mStart && applicationDate <= mEnd) {
           monthRev += ad + commission;
         }
       });
@@ -87,7 +107,8 @@ export async function GET() {
       contracts,
       pipeline: {
         prospects,
-        expectedThisMonth: 0, // フィールドなしのため0
+        newProspects,
+        applications,
         awaitingReview,
       },
       monthlyRevenue,
