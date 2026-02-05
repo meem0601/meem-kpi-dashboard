@@ -5,9 +5,11 @@ import { realestateBase, getCurrentMonthRange, getMonthRange, getLast12Months, t
 const REVENUE_EXCLUDED_STATUSES = [
   '案件登録',
   '内見',
+  '申込済み_審査中',
   '案件登録後キャンセル',
   '内見登録後キャンセル',
   '申込後キャンセル',
+  '審査落ち',
 ];
 
 // 申込カウントで除外するステータス（案件登録/内見/キャンセル系のみ）
@@ -54,8 +56,8 @@ export async function GET() {
       const commission = toNumber(record.get('仲介手数料(税抜)'));
 
       // 売上・成約数: ステータスが除外リストに含まれない + 最終申込日が当月
-      // ※審査落ちも売上にはカウントしない
-      if (!REVENUE_EXCLUDED_STATUSES.includes(status) && status !== '審査落ち' && applicationDate && applicationDate >= start && applicationDate <= end) {
+      // 除外ステータス以外で、最終申込日が当月内の場合にカウント
+      if (!REVENUE_EXCLUDED_STATUSES.includes(status) && applicationDate && applicationDate >= start && applicationDate <= end) {
         revenue += ad + commission;
         contracts++;
       }
@@ -94,7 +96,7 @@ export async function GET() {
         const ad = toNumber(record.get('AD(税抜)'));
         const commission = toNumber(record.get('仲介手数料(税抜)'));
 
-        if (!REVENUE_EXCLUDED_STATUSES.includes(status) && status !== '審査落ち' && applicationDate && applicationDate >= mStart && applicationDate <= mEnd) {
+        if (!REVENUE_EXCLUDED_STATUSES.includes(status) && applicationDate && applicationDate >= mStart && applicationDate <= mEnd) {
           monthRev += ad + commission;
         }
       });
