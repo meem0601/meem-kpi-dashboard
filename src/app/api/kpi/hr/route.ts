@@ -27,7 +27,7 @@ export async function GET() {
 
     // Fetch from 案件 table for prospects
     const caseRecords = await hrBase('案件').select({
-      fields: ['初回推薦日', '案件登録日'],
+      fields: ['推薦日', '案件登録日'],
     }).all();
 
     let revenue = 0;
@@ -64,7 +64,7 @@ export async function GET() {
     let prospects = 0;
     let totalProspects = 0;
     caseRecords.forEach((record) => {
-      const recommendationDate = record.get('初回推薦日') as string[] | string | null;
+      const recommendationDate = record.get('推薦日') as string[] | string | null;
       const registrationDate = record.get('案件登録日') as string;
 
       // 推薦日が空（まだ推薦されていない）= 見込み顧客
