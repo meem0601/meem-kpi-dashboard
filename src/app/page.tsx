@@ -71,7 +71,8 @@ interface SalesKPI {
 }
 
 interface RealestateKPI {
-  revenue: number;
+  revenue: number;           // 確定売上
+  projectedRevenue: number;  // 見込売上
   contracts: number;
   pipeline: {
     prospects: number;
@@ -319,6 +320,7 @@ export default function Dashboard() {
               target={TARGETS.realestate.revenue}
               color="green"
               icon="🏠"
+              projectedValue={realestateKPI?.projectedRevenue}
             />
           </div>
           <div className="animate-slideUp" style={{ animationDelay: '200ms' }}>

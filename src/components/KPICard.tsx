@@ -9,6 +9,7 @@ interface KPICardProps {
   unit?: string;
   color?: 'blue' | 'green' | 'purple' | 'orange';
   icon?: string;
+  projectedValue?: number;  // 見込売上（オプション）
 }
 
 // カウントアップアニメーションフック
@@ -44,8 +45,9 @@ function useCountUp(end: number, duration: number = 1500) {
   return count;
 }
 
-export default function KPICard({ title, current, target, unit = '円', color = 'blue', icon }: KPICardProps) {
+export default function KPICard({ title, current, target, unit = '円', color = 'blue', icon, projectedValue }: KPICardProps) {
   const animatedCurrent = useCountUp(current);
+  const animatedProjected = useCountUp(projectedValue || 0);
   const progress = target > 0 ? Math.min((current / target) * 100, 100) : 0;
   
   const colorConfig = {
@@ -107,13 +109,31 @@ export default function KPICard({ title, current, target, unit = '円', color = 
         </div>
         
         {/* メイン数値 */}
-        <div className="flex items-baseline gap-2 mb-3">
-          <span className={`text-3xl font-bold ${config.text} tabular-nums`}>
-            {formatNumber(animatedCurrent)}
-          </span>
-          <span className="text-sm text-gray-400">
-            / {formatNumber(target)}{unit === '円' ? '円' : unit}
-          </span>
+        <div className="flex items-baseline gap-2 mb-3 flex-wrap">
+          {projectedValue !== undefined ? (
+            <>
+              {/* 見込売上がある場合: 見込（確定）/目標 */}
+              <span className={`text-3xl font-bold ${config.text} tabular-nums`}>
+                {formatNumber(animatedProjected)}
+              </span>
+              <span className="text-sm text-gray-500">
+                ({formatNumber(animatedCurrent)})
+              </span>
+              <span className="text-sm text-gray-400">
+                / {formatNumber(target)}{unit === '円' ? '円' : unit}
+              </span>
+            </>
+          ) : (
+            <>
+              {/* 通常表示 */}
+              <span className={`text-3xl font-bold ${config.text} tabular-nums`}>
+                {formatNumber(animatedCurrent)}
+              </span>
+              <span className="text-sm text-gray-400">
+                / {formatNumber(target)}{unit === '円' ? '円' : unit}
+              </span>
+            </>
+          )}
         </div>
         
         {/* プログレスバー */}

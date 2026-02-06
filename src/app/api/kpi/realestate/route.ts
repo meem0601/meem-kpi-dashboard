@@ -5,11 +5,21 @@ import { realestateBase, getCurrentMonthRange, getMonthRange, getLast12Months, t
 // 60秒キャッシュ
 export const revalidate = 60;
 
-// 売上・成約カウントで除外するステータス
-const REVENUE_EXCLUDED_STATUSES = [
+// 確定売上で除外するステータス（審査中も除外）
+const CONFIRMED_REVENUE_EXCLUDED_STATUSES = [
   '案件登録',
   '内見',
   '申込済み_審査中',
+  '案件登録後キャンセル',
+  '内見登録後キャンセル',
+  '申込後キャンセル',
+  '審査落ち',
+];
+
+// 見込売上で除外するステータス（審査中は含む）
+const PROJECTED_REVENUE_EXCLUDED_STATUSES = [
+  '案件登録',
+  '内見',
   '案件登録後キャンセル',
   '内見登録後キャンセル',
   '申込後キャンセル',
@@ -25,7 +35,8 @@ const APPLICATION_EXCLUDED_STATUSES = [
 ];
 
 interface RealestateKPI {
-  revenue: number;
+  revenue: number;           // 確定売上
+  projectedRevenue: number;  // 見込売上（審査中含む）
   contracts: number;
   pipeline: {
     prospects: number;        // 見込み顧客数
@@ -45,7 +56,8 @@ export async function GET() {
       fields: ['ステータス', '最終申込日', 'AD(税抜)', '仲介手数料(税抜)', '案件登録日', '顧客獲得ルート'],
     }).all();
 
-    let revenue = 0;
+    let revenue = 0;          // 確定売上
+    let projectedRevenue = 0; // 見込売上
     let contracts = 0;
     let prospects = 0;       // 見込み顧客（案件登録/内見）
     let newProspects = 0;    // 新規見込み（当月案件登録）
@@ -59,11 +71,15 @@ export async function GET() {
       const ad = toNumber(record.get('AD(税抜)'));
       const commission = toNumber(record.get('仲介手数料(税抜)'));
 
-      // 売上・成約数: ステータスが除外リストに含まれない + 最終申込日が当月
-      // 除外ステータス以外で、最終申込日が当月内の場合にカウント
-      if (!REVENUE_EXCLUDED_STATUSES.includes(status) && applicationDate && applicationDate >= start && applicationDate <= end) {
+      // 確定売上・成約数: ステータスが除外リストに含まれない + 最終申込日が当月
+      if (!CONFIRMED_REVENUE_EXCLUDED_STATUSES.includes(status) && applicationDate && applicationDate >= start && applicationDate <= end) {
         revenue += ad + commission;
         contracts++;
+      }
+
+      // 見込売上: 審査中も含む（確定売上より広い範囲）
+      if (!PROJECTED_REVENUE_EXCLUDED_STATUSES.includes(status) && applicationDate && applicationDate >= start && applicationDate <= end) {
+        projectedRevenue += ad + commission;
       }
 
       // パイプライン
@@ -102,7 +118,7 @@ export async function GET() {
         const ad = toNumber(record.get('AD(税抜)'));
         const commission = toNumber(record.get('仲介手数料(税抜)'));
 
-        if (!REVENUE_EXCLUDED_STATUSES.includes(status) && applicationDate && applicationDate >= mStart && applicationDate <= mEnd) {
+        if (!CONFIRMED_REVENUE_EXCLUDED_STATUSES.includes(status) && applicationDate && applicationDate >= mStart && applicationDate <= mEnd) {
           monthRev += ad + commission;
         }
       });
@@ -112,6 +128,7 @@ export async function GET() {
 
     const data: RealestateKPI = {
       revenue,
+      projectedRevenue,
       contracts,
       pipeline: {
         prospects,
