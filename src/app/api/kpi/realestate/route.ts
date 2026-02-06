@@ -67,10 +67,10 @@ export async function GET() {
       }
 
       // パイプライン
-      // 見込み顧客: ステータス=案件登録/内見/申込後キャンセル/審査落ち
+      // 見込み顧客: ステータス=案件登録/内見/内見登録後キャンセル/申込後キャンセル/審査落ち
       // ※顧客獲得ルート=撮影は除外
       const acquisitionRoute = record.get('顧客獲得ルート') as string;
-      if ((status === '案件登録' || status === '内見' || status === '申込後キャンセル' || status === '審査落ち') && acquisitionRoute !== '撮影') {
+      if ((status === '案件登録' || status === '内見' || status === '内見登録後キャンセル' || status === '申込後キャンセル' || status === '審査落ち') && acquisitionRoute !== '撮影') {
         prospects++;
       }
 
