@@ -42,7 +42,7 @@ export async function GET() {
     
     // Fetch all records from 案件管理 table
     const records = await realestateBase('案件管理').select({
-      fields: ['ステータス', '最終申込日', 'AD(税抜)', '仲介手数料(税抜)', '案件登録日'],
+      fields: ['ステータス', '最終申込日', 'AD(税抜)', '仲介手数料(税抜)', '案件登録日', '顧客獲得ルート'],
     }).all();
 
     let revenue = 0;
@@ -68,7 +68,9 @@ export async function GET() {
 
       // パイプライン
       // 見込み顧客: ステータス=案件登録/内見/申込後キャンセル/審査落ち
-      if (status === '案件登録' || status === '内見' || status === '申込後キャンセル' || status === '審査落ち') {
+      // ※顧客獲得ルート=撮影は除外
+      const acquisitionRoute = record.get('顧客獲得ルート') as string;
+      if ((status === '案件登録' || status === '内見' || status === '申込後キャンセル' || status === '審査落ち') && acquisitionRoute !== '撮影') {
         prospects++;
       }
 
